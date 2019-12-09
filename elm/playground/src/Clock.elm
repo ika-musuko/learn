@@ -74,6 +74,14 @@ subscriptions model =
 -- VIEW
 
 
+handWidth =
+    3.0
+
+
+secondHandWidth =
+    1.0
+
+
 clockRadius =
     170.0
 
@@ -179,8 +187,28 @@ drawClock hour minute second =
                 , fill "#DD2222"
                 ]
                 []
+            , List.append drawNumbers
+
+            --, drawTicks
+            --, drawHand hour "black" handWidth
+            --, drawHand minute "black" handWidth
+            --, drawHand second "#DD2222" secondHandWidth
             ]
         ]
+
+
+drawNumber : Int -> Svg Msg
+drawNumber number =
+    Svg.text_
+        [ x (String.fromInt (number * 10))
+        , y (String.fromInt (number * 10))
+        ]
+        [ Html.text (String.fromInt number) ]
+
+
+drawNumbers : List (Svg Msg)
+drawNumbers =
+    List.map drawNumber (List.range 1 12)
 
 
 view : Model -> Html Msg
