@@ -91,11 +91,11 @@ clockFaceRadius =
 
 
 svgSize =
-    clockRadius * 2
+    clockRadius * 2.5
 
 
 viewBoxSize =
-    svgSize * 1.2
+    svgSize + 1.2
 
 
 viewBoxSizeString =
@@ -113,16 +113,36 @@ drawClock hour minute second =
             (gradientDefs
                 ++ clockFace
                 ++ clockNumbers
+             --++ clockTicks
+             --++ (clockHand hour "black" handWidth)
+             --++ (clockHand minute "black" handWidth)
+             --++ (clockHand second "#DD2222" secondHandWidth)
             )
         ]
 
 
 drawNumber : Int -> Svg Msg
 drawNumber number =
+    let
+        numberRadius =
+            clockRadius * 0.7
+
+        numberPosition =
+            toFloat number - 3
+
+        xpos =
+            (clockRadius - clockRadius * 0.06) + (numberRadius * cos (numberPosition * pi / 6))
+
+        ypos =
+            (clockRadius + clockRadius * 0.05) + (numberRadius * sin (numberPosition * pi / 6))
+    in
     Svg.text_
-        [ x (String.fromInt (number * 10))
-        , y (String.fromInt (number * 10))
-        , fontSize (String.fromFloat (clockRadius * 0.12))
+        [ x (String.fromFloat xpos)
+        , y (String.fromFloat ypos)
+        , fontSize (String.fromFloat (clockRadius * 0.15))
+        , fontFamily "Noto Sans"
+        , fontWeight "bold"
+        , fill "#555555"
         ]
         [ Html.text (String.fromInt number) ]
 
@@ -169,11 +189,6 @@ clockFace =
         , fill "#DD2222"
         ]
         []
-
-    --, drawTicks
-    --, drawHand hour "black" handWidth
-    --, drawHand minute "black" handWidth
-    --, drawHand second "#DD2222" secondHandWidth
     ]
 
 
