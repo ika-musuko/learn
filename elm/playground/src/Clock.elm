@@ -113,7 +113,7 @@ drawClock hour minute second =
             (gradientDefs
                 ++ clockFace
                 ++ clockNumbers
-             --++ clockTicks
+                ++ clockTicks
              --++ (clockHand hour "black" handWidth)
              --++ (clockHand minute "black" handWidth)
              --++ (clockHand second "#DD2222" secondHandWidth)
@@ -121,28 +121,94 @@ drawClock hour minute second =
         ]
 
 
+drawTick : Int -> Svg Msg
+drawTick number =
+    let
+        isMainTick =
+            remainderBy 5 number == 0
+
+        tickRadius =
+            clockRadius * 0.84
+
+        tickLength =
+            if isMainTick then
+                tickRadius * 0.92
+
+            else
+                tickRadius * 0.95
+
+        xSize =
+            clockRadius - clockRadius * 0.0
+
+        ySize =
+            clockRadius + clockRadius * 0.0
+
+        tickPosition =
+            toFloat number - 15
+
+        x1Pos =
+            xSize + (tickRadius * cos (tickPosition * pi / 30))
+
+        y1Pos =
+            ySize + (tickRadius * sin (tickPosition * pi / 30))
+
+        x2Pos =
+            xSize + (tickLength * cos (tickPosition * pi / 30))
+
+        y2Pos =
+            ySize + (tickLength * sin (tickPosition * pi / 30))
+
+        tickStyle =
+            if isMainTick then
+                "stroke:rgb(66, 66, 66);stroke-width:3"
+
+            else
+                "stroke:rgb(222, 44, 44);stroke-width:1"
+    in
+    line
+        [ x1 (String.fromFloat x1Pos)
+        , y1 (String.fromFloat y1Pos)
+        , x2 (String.fromFloat x2Pos)
+        , y2 (String.fromFloat y2Pos)
+        , Svg.Attributes.style tickStyle
+        ]
+        []
+
+
+clockTicks : List (Svg Msg)
+clockTicks =
+    List.map drawTick (List.range 0 59)
+
+
 drawNumber : Int -> Svg Msg
 drawNumber number =
     let
         numberRadius =
-            clockRadius * 0.7
+            clockRadius * 0.65
+
+        xSize =
+            clockRadius - clockRadius * 0.0
+
+        ySize =
+            clockRadius + clockRadius * 0.05
 
         numberPosition =
             toFloat number - 3
 
-        xpos =
-            (clockRadius - clockRadius * 0.06) + (numberRadius * cos (numberPosition * pi / 6))
+        xPos =
+            xSize + (numberRadius * cos (numberPosition * pi / 6))
 
-        ypos =
-            (clockRadius + clockRadius * 0.05) + (numberRadius * sin (numberPosition * pi / 6))
+        yPos =
+            ySize + (numberRadius * sin (numberPosition * pi / 6))
     in
     Svg.text_
-        [ x (String.fromFloat xpos)
-        , y (String.fromFloat ypos)
+        [ x (String.fromFloat xPos)
+        , y (String.fromFloat yPos)
         , fontSize (String.fromFloat (clockRadius * 0.15))
         , fontFamily "Noto Sans"
         , fontWeight "bold"
         , fill "#555555"
+        , textAnchor "middle"
         ]
         [ Html.text (String.fromInt number) ]
 
