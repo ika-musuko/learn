@@ -74,22 +74,6 @@ subscriptions model =
 -- VIEW
 
 
-handLength =
-    0.75
-
-
-hourHandLength =
-    0.55
-
-
-handWidth =
-    5.0
-
-
-secondHandWidth =
-    2.0
-
-
 clockRadius =
     170.0
 
@@ -129,8 +113,8 @@ drawClock timeInSeconds =
     in
     div []
         [ svg
-            [ width (String.fromFloat svgSize)
-            , height (String.fromFloat svgSize)
+            [ Svg.Attributes.width (String.fromFloat svgSize)
+            , Svg.Attributes.height (String.fromFloat svgSize)
             , viewBox ("0 0 " ++ viewBoxSizeString ++ " " ++ viewBoxSizeString)
             ]
             ((gradientDefs
@@ -147,7 +131,7 @@ drawClock timeInSeconds =
                         [ cx (String.fromFloat clockRadius)
                         , cy (String.fromFloat clockRadius)
                         , r (String.fromFloat (clockFaceRadius * 0.035))
-                        , fill "#DD2222"
+                        , Svg.Attributes.fill "#DD2222"
                         ]
                         []
                    ]
@@ -275,7 +259,7 @@ drawNumber number =
         , fontSize (String.fromFloat (clockRadius * 0.15))
         , fontFamily "Noto Sans"
         , fontWeight "bold"
-        , fill "#555555"
+        , Svg.Attributes.fill "#555555"
         , textAnchor "middle"
         ]
         [ Html.text (String.fromInt number) ]
@@ -293,7 +277,7 @@ clockFace =
         [ cx (String.fromFloat clockRadius)
         , cy (String.fromFloat clockRadius)
         , r (String.fromFloat clockRadius)
-        , fill "url(#metal)"
+        , Svg.Attributes.fill "url(#metal)"
         ]
         []
 
@@ -302,7 +286,7 @@ clockFace =
         [ cx (String.fromFloat (clockRadius * 1.01))
         , cy (String.fromFloat (clockRadius * 1.01))
         , r (String.fromFloat (clockFaceRadius * 0.99))
-        , fill "black"
+        , Svg.Attributes.fill "black"
         ]
         []
 
@@ -311,7 +295,7 @@ clockFace =
         [ cx (String.fromFloat clockRadius)
         , cy (String.fromFloat clockRadius)
         , r (String.fromFloat clockFaceRadius)
-        , fill "url(#clockFaceGradient)"
+        , Svg.Attributes.fill "url(#clockFaceGradient)"
         ]
         []
     ]
