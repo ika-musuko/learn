@@ -110,90 +110,10 @@ drawClock hour minute second =
             , height (String.fromFloat svgSize)
             , viewBox ("0 0 " ++ viewBoxSizeString ++ " " ++ viewBoxSizeString)
             ]
-            [ defs
-                []
-                [ radialGradient
-                    [ id "clockFaceGradient"
-                    , cx "51%"
-                    , cy "51%"
-                    , r "50%"
-                    , fx "50%"
-                    , fy "50%"
-                    ]
-                    [ stop
-                        [ offset "90%"
-                        , Svg.Attributes.style "stop-color:rgb(255,255,255)"
-                        ]
-                        []
-                    , stop
-                        [ offset "100%"
-                        , Svg.Attributes.style "stop-color:rgb(188,188,188)"
-                        ]
-                        []
-                    ]
-                , radialGradient
-                    [ id "metal"
-                    , cx "22%"
-                    , cy "25%"
-                    , r "99%"
-                    , fx "18%"
-                    , fy "20%"
-                    ]
-                    [ stop
-                        [ offset "0%"
-                        , Svg.Attributes.style "stop-color:rgb(222,222,222)"
-                        ]
-                        []
-                    , stop
-                        [ offset "45%"
-                        , Svg.Attributes.style "stop-color:rgb(128,128,128)"
-                        ]
-                        []
-                    ]
-                ]
-
-            -- metal border
-            , circle
-                [ cx (String.fromFloat clockRadius)
-                , cy (String.fromFloat clockRadius)
-                , r (String.fromFloat clockRadius)
-                , fill "url(#metal)"
-                ]
-                []
-
-            -- black edge
-            , circle
-                [ cx (String.fromFloat (clockRadius * 1.01))
-                , cy (String.fromFloat (clockRadius * 1.01))
-                , r (String.fromFloat (clockFaceRadius * 0.99))
-                , fill "black"
-                ]
-                []
-
-            -- white inner face
-            , circle
-                [ cx (String.fromFloat clockRadius)
-                , cy (String.fromFloat clockRadius)
-                , r (String.fromFloat clockFaceRadius)
-                , fill "url(#clockFaceGradient)"
-                ]
-                []
-
-            -- red second hand nub
-            , circle
-                [ cx (String.fromFloat clockRadius)
-                , cy (String.fromFloat clockRadius)
-                , r (String.fromFloat (clockFaceRadius * 0.035))
-                , fill "#DD2222"
-                ]
-                []
-            , List.append drawNumbers
-
-            --, drawTicks
-            --, drawHand hour "black" handWidth
-            --, drawHand minute "black" handWidth
-            --, drawHand second "#DD2222" secondHandWidth
-            ]
+            (gradientDefs
+                ++ clockFace
+                ++ clockNumbers
+            )
         ]
 
 
@@ -202,13 +122,105 @@ drawNumber number =
     Svg.text_
         [ x (String.fromInt (number * 10))
         , y (String.fromInt (number * 10))
+        , fontSize (String.fromFloat (clockRadius * 0.12))
         ]
         [ Html.text (String.fromInt number) ]
 
 
-drawNumbers : List (Svg Msg)
-drawNumbers =
+clockNumbers : List (Svg Msg)
+clockNumbers =
     List.map drawNumber (List.range 1 12)
+
+
+clockFace : List (Svg Msg)
+clockFace =
+    -- metal border
+    [ circle
+        [ cx (String.fromFloat clockRadius)
+        , cy (String.fromFloat clockRadius)
+        , r (String.fromFloat clockRadius)
+        , fill "url(#metal)"
+        ]
+        []
+
+    -- black edge
+    , circle
+        [ cx (String.fromFloat (clockRadius * 1.01))
+        , cy (String.fromFloat (clockRadius * 1.01))
+        , r (String.fromFloat (clockFaceRadius * 0.99))
+        , fill "black"
+        ]
+        []
+
+    -- white inner face
+    , circle
+        [ cx (String.fromFloat clockRadius)
+        , cy (String.fromFloat clockRadius)
+        , r (String.fromFloat clockFaceRadius)
+        , fill "url(#clockFaceGradient)"
+        ]
+        []
+
+    -- red second hand nub
+    , circle
+        [ cx (String.fromFloat clockRadius)
+        , cy (String.fromFloat clockRadius)
+        , r (String.fromFloat (clockFaceRadius * 0.035))
+        , fill "#DD2222"
+        ]
+        []
+
+    --, drawTicks
+    --, drawHand hour "black" handWidth
+    --, drawHand minute "black" handWidth
+    --, drawHand second "#DD2222" secondHandWidth
+    ]
+
+
+gradientDefs : List (Svg Msg)
+gradientDefs =
+    [ defs
+        []
+        [ radialGradient
+            [ id "clockFaceGradient"
+            , cx "51%"
+            , cy "51%"
+            , r "50%"
+            , fx "50%"
+            , fy "50%"
+            ]
+            [ stop
+                [ offset "90%"
+                , Svg.Attributes.style "stop-color:rgb(255,255,255)"
+                ]
+                []
+            , stop
+                [ offset "100%"
+                , Svg.Attributes.style "stop-color:rgb(188,188,188)"
+                ]
+                []
+            ]
+        , radialGradient
+            [ id "metal"
+            , cx "22%"
+            , cy "25%"
+            , r "99%"
+            , fx "18%"
+            , fy "20%"
+            ]
+            [ stop
+                [ offset "0%"
+                , Svg.Attributes.style "stop-color:rgb(222,222,222)"
+                ]
+                []
+            , stop
+                [ offset "45%"
+                , Svg.Attributes.style "stop-color:rgb(128,128,128)"
+                ]
+                []
+            ]
+        ]
+    ]
 
 
 view : Model -> Html Msg
