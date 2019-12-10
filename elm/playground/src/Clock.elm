@@ -2,6 +2,7 @@ module Clock exposing (main)
 
 import Browser
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
 import Task
@@ -75,19 +76,19 @@ subscriptions model =
 
 
 clockRadius =
-    170.0
+    170
 
 
 clockFaceRadius =
     clockRadius * 0.88
 
 
-svgSize =
-    clockRadius * 2.5
-
-
 viewBoxSize =
-    svgSize + 1.2
+    clockRadius * 2
+
+
+svgSize =
+    viewBoxSize
 
 
 viewBoxSizeString =
@@ -113,8 +114,8 @@ drawClock timeInSeconds =
     in
     div []
         [ svg
-            [ Svg.Attributes.width (String.fromFloat svgSize)
-            , Svg.Attributes.height (String.fromFloat svgSize)
+            [ Svg.Attributes.width "100%"
+            , Svg.Attributes.height "100%"
             , viewBox ("0 0 " ++ viewBoxSizeString ++ " " ++ viewBoxSizeString)
             ]
             ((gradientDefs
@@ -306,7 +307,7 @@ gradientDefs =
     [ defs
         []
         [ radialGradient
-            [ id "clockFaceGradient"
+            [ Svg.Attributes.id "clockFaceGradient"
             , cx "51%"
             , cy "51%"
             , r "50%"
@@ -325,7 +326,7 @@ gradientDefs =
                 []
             ]
         , radialGradient
-            [ id "metal"
+            [ Svg.Attributes.id "metal"
             , cx "22%"
             , cy "25%"
             , r "99%"
@@ -359,7 +360,12 @@ view model =
         second =
             Time.toSecond model.zone model.time
     in
-    div []
+    div
+        [ Html.Attributes.style "margin" "auto"
+        , Html.Attributes.style "width" "50%"
+        , Html.Attributes.style "top" "50%"
+        , Html.Attributes.style "text-align" "center"
+        ]
         [ h1
             []
             [ Html.text
