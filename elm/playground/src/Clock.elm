@@ -74,12 +74,20 @@ subscriptions model =
 -- VIEW
 
 
+handLength =
+    0.75
+
+
+hourHandLength =
+    0.55
+
+
 handWidth =
-    3.0
+    5.0
 
 
 secondHandWidth =
-    1.0
+    2.0
 
 
 clockRadius =
@@ -102,23 +110,80 @@ viewBoxSizeString =
     String.fromFloat viewBoxSize
 
 
-drawClock : Int -> Int -> Int -> Html Msg
-drawClock hour minute second =
+fmod : Float -> Float -> Float
+fmod lh rh =
+    lh - (toFloat (floor (lh / rh)) * rh)
+
+
+drawClock : Float -> Html Msg
+drawClock timeInSeconds =
+    let
+        hour =
+            timeInSeconds / 3600.0
+
+        minute =
+            fmod (timeInSeconds / 60) 60
+
+        second =
+            fmod (minute * 60) 60
+    in
     div []
         [ svg
             [ width (String.fromFloat svgSize)
             , height (String.fromFloat svgSize)
             , viewBox ("0 0 " ++ viewBoxSizeString ++ " " ++ viewBoxSizeString)
             ]
-            (gradientDefs
+            ((gradientDefs
                 ++ clockFace
                 ++ clockNumbers
                 ++ clockTicks
-             --++ (clockHand hour "black" handWidth)
-             --++ (clockHand minute "black" handWidth)
-             --++ (clockHand second "#DD2222" secondHandWidth)
+             )
+                ++ [ clockHand hour 12 "#333333" 6.0 0.45
+                   , clockHand minute 60 "#333333" 6.0 0.7
+                   , clockHand second 60 "#DD2222" 2.0 0.75
+
+                   -- red second hand nub
+                   , circle
+                        [ cx (String.fromFloat clockRadius)
+                        , cy (String.fromFloat clockRadius)
+                        , r (String.fromFloat (clockFaceRadius * 0.035))
+                        , fill "#DD2222"
+                        ]
+                        []
+                   ]
             )
         ]
+
+
+clockHand : Float -> Float -> String -> Float -> Float -> Svg Msg
+clockHand value maxValue color width length =
+    let
+        handRadius =
+            clockRadius * length
+
+        handPosition =
+            value - (maxValue / 4.0)
+
+        angle =
+            handPosition * pi / (maxValue / 2)
+
+        x1Pos =
+            clockRadius + (handRadius * cos angle)
+
+        y1Pos =
+            clockRadius + (handRadius * sin angle)
+
+        handStyle =
+            "stroke:" ++ color ++ ";stroke-width:" ++ String.fromFloat width
+    in
+    line
+        [ x1 (String.fromFloat x1Pos)
+        , y1 (String.fromFloat y1Pos)
+        , x2 (String.fromFloat clockRadius)
+        , y2 (String.fromFloat clockRadius)
+        , Svg.Attributes.style handStyle
+        ]
+        []
 
 
 drawTick : Int -> Svg Msg
@@ -146,17 +211,20 @@ drawTick number =
         tickPosition =
             toFloat number - 15
 
+        angle =
+            tickPosition * pi / 30
+
         x1Pos =
-            xSize + (tickRadius * cos (tickPosition * pi / 30))
+            xSize + (tickRadius * cos angle)
 
         y1Pos =
-            ySize + (tickRadius * sin (tickPosition * pi / 30))
+            ySize + (tickRadius * sin angle)
 
         x2Pos =
-            xSize + (tickLength * cos (tickPosition * pi / 30))
+            xSize + (tickLength * cos angle)
 
         y2Pos =
-            ySize + (tickLength * sin (tickPosition * pi / 30))
+            ySize + (tickLength * sin angle)
 
         tickStyle =
             if isMainTick then
@@ -246,15 +314,6 @@ clockFace =
         , fill "url(#clockFaceGradient)"
         ]
         []
-
-    -- red second hand nub
-    , circle
-        [ cx (String.fromFloat clockRadius)
-        , cy (String.fromFloat clockRadius)
-        , r (String.fromFloat (clockFaceRadius * 0.035))
-        , fill "#DD2222"
-        ]
-        []
     ]
 
 
@@ -327,5 +386,5 @@ view model =
                     ++ String.fromInt second
                 )
             ]
-        , drawClock hour minute second
+        , drawClock (toFloat (hour * 3600 + minute * 60 + second))
         ]
