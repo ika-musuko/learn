@@ -75,26 +75,6 @@ subscriptions model =
 -- VIEW
 
 
-clockRadius =
-    170
-
-
-clockFaceRadius =
-    clockRadius * 0.88
-
-
-viewBoxSize =
-    clockRadius * 2
-
-
-svgSize =
-    viewBoxSize
-
-
-viewBoxSizeString =
-    String.fromFloat viewBoxSize
-
-
 fmod : Float -> Float -> Float
 fmod lh rh =
     lh - (toFloat (floor (lh / rh)) * rh)
@@ -103,6 +83,29 @@ fmod lh rh =
 drawClock : Float -> Html Msg
 drawClock timeInSeconds =
     let
+        -- size related
+        clockRadius =
+            170.0
+
+        clockFaceRadius =
+            clockRadius * 0.88
+
+        handWidth =
+            clockRadius * 0.05
+
+        secondHandWidth =
+            clockRadius * 0.02
+
+        viewBoxSize =
+            clockRadius * 2
+
+        svgSize =
+            viewBoxSize
+
+        viewBoxSizeString =
+            String.fromFloat viewBoxSize
+
+        -- time related
         hour =
             timeInSeconds / 3600.0
 
@@ -119,13 +122,13 @@ drawClock timeInSeconds =
             , viewBox ("0 0 " ++ viewBoxSizeString ++ " " ++ viewBoxSizeString)
             ]
             ((gradientDefs
-                ++ clockFace
-                ++ clockNumbers
-                ++ clockTicks
+                ++ clockFace clockRadius clockFaceRadius
+                ++ clockNumbers clockRadius
+                ++ clockTicks clockRadius
              )
-                ++ [ clockHand hour 12 "#333333" 6.0 0.45
-                   , clockHand minute 60 "#333333" 6.0 0.7
-                   , clockHand second 60 "#DD2222" 2.0 0.75
+                ++ [ clockHand hour 12 "#333333" 6.0 0.45 clockRadius
+                   , clockHand minute 60 "#333333" 6.0 0.7 clockRadius
+                   , clockHand second 60 "#DD2222" 2.0 0.75 clockRadius
 
                    -- red second hand nub
                    , circle
@@ -140,8 +143,8 @@ drawClock timeInSeconds =
         ]
 
 
-clockHand : Float -> Float -> String -> Float -> Float -> Svg Msg
-clockHand value maxValue color width length =
+clockHand : Float -> Float -> String -> Float -> Float -> Float -> Svg Msg
+clockHand value maxValue color width length clockRadius =
     let
         handRadius =
             clockRadius * length
@@ -171,8 +174,8 @@ clockHand value maxValue color width length =
         []
 
 
-drawTick : Int -> Svg Msg
-drawTick number =
+drawTick : Int -> Float -> Svg Msg
+drawTick number clockRadius =
     let
         isMainTick =
             remainderBy 5 number == 0
@@ -187,12 +190,6 @@ drawTick number =
             else
                 tickRadius * 0.95
 
-        xSize =
-            clockRadius - clockRadius * 0.0
-
-        ySize =
-            clockRadius + clockRadius * 0.0
-
         tickPosition =
             toFloat number - 15
 
@@ -200,16 +197,16 @@ drawTick number =
             tickPosition * pi / 30
 
         x1Pos =
-            xSize + (tickRadius * cos angle)
+            clockRadius + (tickRadius * cos angle)
 
         y1Pos =
-            ySize + (tickRadius * sin angle)
+            clockRadius + (tickRadius * sin angle)
 
         x2Pos =
-            xSize + (tickLength * cos angle)
+            clockRadius + (tickLength * cos angle)
 
         y2Pos =
-            ySize + (tickLength * sin angle)
+            clockRadius + (tickLength * sin angle)
 
         tickStyle =
             if isMainTick then
@@ -228,13 +225,17 @@ drawTick number =
         []
 
 
-clockTicks : List (Svg Msg)
-clockTicks =
-    List.map drawTick (List.range 0 59)
+clockTicks : Float -> List (Svg Msg)
+clockTicks clockRadius =
+    let
+        drawTicksWithRadius tick =
+            drawTick tick clockRadius
+    in
+    List.map drawTicksWithRadius (List.range 0 59)
 
 
-drawNumber : Int -> Svg Msg
-drawNumber number =
+drawNumber : Int -> Float -> Svg Msg
+drawNumber number clockRadius =
     let
         numberRadius =
             clockRadius * 0.65
@@ -266,13 +267,17 @@ drawNumber number =
         [ Html.text (String.fromInt number) ]
 
 
-clockNumbers : List (Svg Msg)
-clockNumbers =
-    List.map drawNumber (List.range 1 12)
+clockNumbers : Float -> List (Svg Msg)
+clockNumbers clockRadius =
+    let
+        drawNumberWithRadius number =
+            drawNumber number clockRadius
+    in
+    List.map drawNumberWithRadius (List.range 1 12)
 
 
-clockFace : List (Svg Msg)
-clockFace =
+clockFace : Float -> Float -> List (Svg Msg)
+clockFace clockRadius clockFaceRadius =
     -- metal border
     [ circle
         [ cx (String.fromFloat clockRadius)
@@ -347,6 +352,21 @@ gradientDefs =
         ]
     ]
 
+clock : Int -> Int -> Int -> String -> Html Msg
+clock hour minute second size =
+    div
+       [ Html.Attributes.style "width" size
+       , Html.Attributes.style "height" size
+       , Html.Attributes.style "display" "flex"
+       , Html.Attributes.style "align-items" "center"
+       , Html.Attributes.style "justify-content" "center"
+       ]
+       [ 
+           div 
+           [ Html.Attributes.style "width" "100%"
+           ]
+           [drawClock (toFloat (hour * 3600 + minute * 60 + second))]
+       ]
 
 view : Model -> Html Msg
 view model =
@@ -359,22 +379,10 @@ view model =
 
         second =
             Time.toSecond model.zone model.time
+
+        estHour = hour + 3
     in
-    div
-        [ Html.Attributes.style "margin" "auto"
-        , Html.Attributes.style "width" "50%"
-        , Html.Attributes.style "top" "50%"
-        , Html.Attributes.style "text-align" "center"
-        ]
-        [ h1
-            []
-            [ Html.text
-                (String.fromInt hour
-                    ++ ":"
-                    ++ String.fromInt minute
-                    ++ ":"
-                    ++ String.fromInt second
-                )
-            ]
-        , drawClock (toFloat (hour * 3600 + minute * 60 + second))
+        div []
+        [ clock hour minute second "250px"
+        , clock estHour minute second "250px"
         ]
