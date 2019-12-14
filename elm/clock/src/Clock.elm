@@ -1,78 +1,9 @@
-module Clock exposing (main)
+module Clock exposing (clock)
 
-import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Task
-import Time
-
-
-
--- MAIN
-
-
-main =
-    Browser.element
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
-
-
-
--- MODEL
-
-
-type alias Model =
-    { zone : Time.Zone
-    , time : Time.Posix
-    }
-
-
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( Model Time.utc (Time.millisToPosix 0)
-    , Task.perform AdjustTimeZone Time.here
-    )
-
-
-
--- UPDATE
-
-
-type Msg
-    = Tick Time.Posix
-    | AdjustTimeZone Time.Zone
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        Tick newTime ->
-            ( { model | time = newTime }
-            , Cmd.none
-            )
-
-        AdjustTimeZone newZone ->
-            ( { model | zone = newZone }
-            , Cmd.none
-            )
-
-
-
--- SUBSCRIPTIONS
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Time.every 1000 Tick
-
-
-
--- VIEW
 
 
 fmod : Float -> Float -> Float
@@ -80,7 +11,7 @@ fmod lh rh =
     lh - (toFloat (floor (lh / rh)) * rh)
 
 
-drawClock : Float -> Html Msg
+drawClock : Float -> Html msg
 drawClock timeInSeconds =
     let
         -- size related
@@ -143,7 +74,7 @@ drawClock timeInSeconds =
         ]
 
 
-clockHand : Float -> Float -> String -> Float -> Float -> Float -> Svg Msg
+clockHand : Float -> Float -> String -> Float -> Float -> Float -> Svg msg
 clockHand value maxValue color width length clockRadius =
     let
         handRadius =
@@ -174,7 +105,7 @@ clockHand value maxValue color width length clockRadius =
         []
 
 
-drawTick : Int -> Float -> Svg Msg
+drawTick : Int -> Float -> Svg msg
 drawTick number clockRadius =
     let
         isMainTick =
@@ -225,7 +156,7 @@ drawTick number clockRadius =
         []
 
 
-clockTicks : Float -> List (Svg Msg)
+clockTicks : Float -> List (Svg msg)
 clockTicks clockRadius =
     let
         drawTicksWithRadius tick =
@@ -234,7 +165,7 @@ clockTicks clockRadius =
     List.map drawTicksWithRadius (List.range 0 59)
 
 
-drawNumber : Int -> Float -> Svg Msg
+drawNumber : Int -> Float -> Svg msg
 drawNumber number clockRadius =
     let
         numberRadius =
@@ -267,7 +198,7 @@ drawNumber number clockRadius =
         [ Html.text (String.fromInt number) ]
 
 
-clockNumbers : Float -> List (Svg Msg)
+clockNumbers : Float -> List (Svg msg)
 clockNumbers clockRadius =
     let
         drawNumberWithRadius number =
@@ -276,7 +207,7 @@ clockNumbers clockRadius =
     List.map drawNumberWithRadius (List.range 1 12)
 
 
-clockFace : Float -> Float -> List (Svg Msg)
+clockFace : Float -> Float -> List (Svg msg)
 clockFace clockRadius clockFaceRadius =
     -- metal border
     [ circle
@@ -307,7 +238,7 @@ clockFace clockRadius clockFaceRadius =
     ]
 
 
-gradientDefs : List (Svg Msg)
+gradientDefs : List (Svg msg)
 gradientDefs =
     [ defs
         []
@@ -352,37 +283,20 @@ gradientDefs =
         ]
     ]
 
-clock : Int -> Int -> Int -> String -> Html Msg
+
+clock : Int -> Int -> Int -> String -> Html msg
 clock hour minute second size =
     div
-       [ Html.Attributes.style "width" size
-       , Html.Attributes.style "height" size
-       , Html.Attributes.style "display" "flex"
-       , Html.Attributes.style "align-items" "center"
-       , Html.Attributes.style "justify-content" "center"
-       ]
-       [ 
-           div 
-           [ Html.Attributes.style "width" "100%"
-           ]
-           [drawClock (toFloat (hour * 3600 + minute * 60 + second))]
-       ]
-
-view : Model -> Html Msg
-view model =
-    let
-        hour =
-            Time.toHour model.zone model.time
-
-        minute =
-            Time.toMinute model.zone model.time
-
-        second =
-            Time.toSecond model.zone model.time
-
-        estHour = hour + 3
-    in
-        div []
-        [ clock hour minute second "250px"
-        , clock estHour minute second "250px"
+        [ Html.Attributes.style "width" size
+        , Html.Attributes.style "height" size
+        , Html.Attributes.style "display" "flex"
+        , Html.Attributes.style "align-items" "center"
+        , Html.Attributes.style "justify-content" "center"
         ]
+        [ div
+            [ Html.Attributes.style "width" "100%"
+            ]
+            [ drawClock (toFloat (hour * 3600 + minute * 60 + second)) ]
+        ]
+
+
