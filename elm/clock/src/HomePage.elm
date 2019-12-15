@@ -1,9 +1,9 @@
 module HomePage exposing (main)
 
+import Browser
 import Clock exposing (clock)
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Browser
 import Task
 import Time
 
@@ -26,15 +26,16 @@ main =
 
 
 type alias Model =
-    { zone : Time.Zone
-    , time : Time.Posix
+    { time : Time.Posix
+    , zones : List Time.Zone
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model Time.utc (Time.millisToPosix 0)
-    , Task.perform AdjustTimeZone Time.here
+    ( Model (Time.millisToPosix 0)
+        []
+    , Task.perform AddCurrentTimeZone Time.here
     )
 
 
@@ -44,7 +45,7 @@ init _ =
 
 type Msg
     = Tick Time.Posix
-    | AdjustTimeZone Time.Zone
+    | AddCurrentTimeZone Time.Zone
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -55,8 +56,12 @@ update msg model =
             , Cmd.none
             )
 
-        AdjustTimeZone newZone ->
-            ( { model | zone = newZone }
+        AddCurrentTimeZone timeZone ->
+            let
+                newZones =
+                    model.zones ++ [ timeZone ]
+            in
+            ( { model | zones = newZones }
             , Cmd.none
             )
 
@@ -69,24 +74,32 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Time.every 1000 Tick
 
--- VIEW 
+
+
+-- VIEW
+
+
+clockFromTime : Time.Posix -> String -> Time.Zone -> Html msg
+clockFromTime time size zone =
+    let
+        hour =
+            Time.toHour zone time
+
+        minute =
+            Time.toMinute zone time
+
+        second =
+            Time.toSecond zone time
+    in
+    clock hour minute second size
+
 
 view : Model -> Html msg
 view model =
-    let
-        hour =
-            Time.toHour model.zone model.time
-
-        minute =
-            Time.toMinute model.zone model.time
-
-        second =
-            Time.toSecond model.zone model.time
-
-        estHour =
-            hour + 3
-    in
-    div []
-        [ clock hour minute second "250px"
-        , clock estHour minute second "250px"
+    div
+        [ style "display" "flex"
+        , style "flex-direction" "row"
         ]
+        (model.zones
+            |> List.map (clockFromTime model.time "250px")
+        )
