@@ -162,8 +162,8 @@ clockTicks clockRadius =
         |> List.map (drawTick clockRadius)
 
 
-drawNumber : Int -> Float -> Svg msg
-drawNumber number clockRadius =
+drawNumber : Float -> Int -> Svg msg
+drawNumber clockRadius number =
     let
         numberRadius =
             clockRadius * 0.65
@@ -197,11 +197,8 @@ drawNumber number clockRadius =
 
 clockNumbers : Float -> List (Svg msg)
 clockNumbers clockRadius =
-    let
-        drawNumberWithRadius number =
-            drawNumber number clockRadius
-    in
-    List.map drawNumberWithRadius (List.range 1 12)
+    List.range 1 12
+        |> List.map (drawNumber clockRadius)
 
 
 clockFace : Float -> Float -> List (Svg msg)
@@ -295,5 +292,3 @@ clock hour minute second size =
             ]
             [ drawClock (toFloat (hour * 3600 + minute * 60 + second)) ]
         ]
-
-

@@ -2,10 +2,12 @@ module HomePage exposing (main)
 
 import Browser
 import Clock exposing (clock)
+import Dict exposing (keys)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Task
 import Time
+import TimeZone exposing (zones)
 
 
 
@@ -35,7 +37,7 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( Model (Time.millisToPosix 0)
         []
-    , Task.perform AddCurrentTimeZone Time.here
+    , Task.perform AddTimeZone Time.here
     )
 
 
@@ -45,7 +47,7 @@ init _ =
 
 type Msg
     = Tick Time.Posix
-    | AddCurrentTimeZone Time.Zone
+    | AddTimeZone Time.Zone
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -56,7 +58,7 @@ update msg model =
             , Cmd.none
             )
 
-        AddCurrentTimeZone timeZone ->
+        AddTimeZone timeZone ->
             let
                 newZones =
                     model.zones ++ [ timeZone ]
@@ -94,6 +96,28 @@ clockFromTime time size zone =
     clock hour minute second size
 
 
+option : String -> Html msg
+option name =
+    Html.option [ value name ] [ text name ]
+
+
+zoneOptions : List (Html msg)
+zoneOptions =
+    zones
+        |> Dict.keys
+        |> List.map option
+
+
+clockWidget : Model -> Time.Zone -> Html msg
+clockWidget model zone =
+    div []
+        [ clockFromTime model.time "250px" zone
+        , select
+            []
+            zoneOptions
+        ]
+
+
 view : Model -> Html msg
 view model =
     div
@@ -101,5 +125,5 @@ view model =
         , style "flex-direction" "row"
         ]
         (model.zones
-            |> List.map (clockFromTime model.time "250px")
+            |> List.map (clockWidget model)
         )
