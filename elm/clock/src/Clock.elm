@@ -105,8 +105,8 @@ clockHand value maxValue color width length clockRadius =
         []
 
 
-drawTick : Int -> Float -> Svg msg
-drawTick number clockRadius =
+drawTick : Float -> Int -> Svg msg
+drawTick clockRadius number =
     let
         isMainTick =
             remainderBy 5 number == 0
@@ -158,11 +158,8 @@ drawTick number clockRadius =
 
 clockTicks : Float -> List (Svg msg)
 clockTicks clockRadius =
-    let
-        drawTicksWithRadius tick =
-            drawTick tick clockRadius
-    in
-    List.map drawTicksWithRadius (List.range 0 59)
+    List.range 0 59
+        |> List.map (drawTick clockRadius)
 
 
 drawNumber : Int -> Float -> Svg msg
