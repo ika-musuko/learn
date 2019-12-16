@@ -73,6 +73,18 @@ changeZoneAt index zoneName model =
     )
 
 
+deleteClockAt : Int -> Model -> ( Model, Cmd Msg )
+deleteClockAt index model =
+    let
+        newZones =
+            (model.zones |> List.take index)
+                ++ (model.zones |> List.drop (index + 1))
+    in
+    ( { model | zones = newZones }
+    , Cmd.none
+    )
+
+
 type Msg
     = Tick Time.Posix
     | AddTimeZone String
@@ -108,14 +120,7 @@ update msg model =
             model |> changeZoneAt index zoneName
 
         DeleteClock index ->
-            let
-                newZones =
-                    (model.zones |> List.take index)
-                        ++ (model.zones |> List.drop (index + 1))
-            in
-            ( { model | zones = newZones }
-            , Cmd.none
-            )
+            model |> deleteClockAt index
 
 
 
@@ -166,16 +171,21 @@ zoneOptions zoneName =
 
 clockWidget : Model -> Int -> Time.Zone -> Html Msg
 clockWidget model index zone =
+    let
+        zoneName =
+            model.zones
+                |> getAt index
+                |> Maybe.withDefault utc
+    in
     div
         []
         [ clockFromTime model.time "250px" zone
+        , h5 [] [ text zoneName ]
+
+        -- TODO: update selected value on delete as well
         , select
             [ Html.Events.onInput (ChangeTimeZone index) ]
-            (model.zones
-                |> getAt index
-                |> Maybe.withDefault utc
-                |> zoneOptions
-            )
+            (zoneOptions zoneName)
         , button
             [ onClick (DeleteClock index) ]
             [ text "Delete" ]
