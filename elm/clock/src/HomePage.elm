@@ -32,6 +32,7 @@ main =
 type alias Model =
     { time : Time.Posix
     , zones : List String
+    , searchResults : Dict Int (List String)
     }
 
 
@@ -41,8 +42,7 @@ utc =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (Time.millisToPosix 0)
-        []
+    ( Model (Time.millisToPosix 0) [] Dict.empty
     , TimeZone.getZone |> Task.attempt GetLocalTimeZone
     )
 
@@ -51,24 +51,19 @@ init _ =
 -- UPDATE
 
 
-addNewZone : String -> Model -> ( Model, Cmd Msg )
-addNewZone zoneName model =
-    let
-        newZones =
-            model.zones ++ [ zoneName ]
-    in
-    ( { model | zones = newZones }
+addClock : String -> Model -> ( Model, Cmd Msg )
+addClock zoneName model =
+    ( { model | zones = model.zones ++ [ zoneName ] }
     , Cmd.none
     )
 
 
-changeZoneAt : Int -> String -> Model -> ( Model, Cmd Msg )
-changeZoneAt index zoneName model =
-    let
-        newZones =
-            model.zones |> setAt index zoneName
-    in
-    ( { model | zones = newZones }
+changeClockAt : Int -> String -> Model -> ( Model, Cmd Msg )
+changeClockAt index zoneName model =
+    ( { model
+        | zones = model.zones |> setAt index zoneName
+        , searchResults = Dict.empty
+      }
     , Cmd.none
     )
 
@@ -80,16 +75,43 @@ deleteClockAt index model =
             (model.zones |> List.take index)
                 ++ (model.zones |> List.drop (index + 1))
     in
-    ( { model | zones = newZones }
+    ( { model
+        | zones = newZones
+        , searchResults = Dict.empty
+      }
+    , Cmd.none
+    )
+
+
+searchZones : String -> List String
+searchZones query =
+    case query of
+        "" ->
+            []
+
+        _ ->
+            zones
+                |> Dict.keys
+                |> List.filter
+                    (\zone ->
+                        String.toUpper zone
+                            |> String.contains (query |> String.toUpper |> String.replace " " "_")
+                    )
+
+
+populateZoneSearchResults : Int -> String -> Model -> ( Model, Cmd Msg )
+populateZoneSearchResults index query model =
+    ( { model | searchResults = model.searchResults |> Dict.insert index (query |> searchZones) }
     , Cmd.none
     )
 
 
 type Msg
     = Tick Time.Posix
-    | AddTimeZone String
-    | ChangeTimeZone Int String
+    | AddClock String
+    | ChangeClock Int String
     | DeleteClock Int
+    | SearchZone Int String
     | GetLocalTimeZone (Result TimeZone.Error ( String, Time.Zone ))
 
 
@@ -106,21 +128,24 @@ update msg model =
                         Err error ->
                             "Atlantic/Reykjavik"
             in
-            model |> addNewZone firstZone
+            model |> addClock firstZone
 
         Tick newTime ->
             ( { model | time = newTime }
             , Cmd.none
             )
 
-        AddTimeZone zoneName ->
-            model |> addNewZone zoneName
+        AddClock zoneName ->
+            model |> addClock zoneName
 
-        ChangeTimeZone index zoneName ->
-            model |> changeZoneAt index zoneName
+        ChangeClock index zoneName ->
+            model |> changeClockAt index zoneName
 
         DeleteClock index ->
             model |> deleteClockAt index
+
+        SearchZone index query ->
+            model |> populateZoneSearchResults index query
 
 
 
@@ -176,16 +201,24 @@ clockWidget model index zone =
             model.zones
                 |> getAt index
                 |> Maybe.withDefault utc
+
+        searchResults =
+            model.searchResults
+                |> Dict.get index
+                |> Maybe.withDefault []
     in
     div
         []
         [ clockFromTime model.time "250px" zone
         , h5 [] [ text zoneName ]
-
-        -- TODO: update selected value on delete as well
-        , select
-            [ Html.Events.onInput (ChangeTimeZone index) ]
-            (zoneOptions zoneName)
+        , input
+            [ Html.Events.onInput (SearchZone index)
+            , placeholder "Search Timezone"
+            ]
+            []
+        , searchResults
+            |> List.map (\match -> li [] [ text match ])
+            |> ul []
         , button
             [ onClick (DeleteClock index) ]
             [ text "Delete" ]
@@ -218,6 +251,6 @@ view model =
                 |> List.indexedMap (clockWidget model)
             )
         , button
-            [ onClick (AddTimeZone utc) ]
+            [ onClick (AddClock utc) ]
             [ text "Add clock" ]
         ]
