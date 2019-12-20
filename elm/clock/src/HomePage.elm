@@ -28,11 +28,15 @@ main =
 
 -- MODEL
 
+type alias SearchResults =
+    { currentIndex : Maybe Int
+    , results : List String 
+    }
 
 type alias Model =
     { time : Time.Posix
     , zones : List String
-    , searchResults : Dict Int (List String)
+    , searchResults : SearchResults
     }
 
 
@@ -42,7 +46,7 @@ utc =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (Time.millisToPosix 0) [] Dict.empty
+    ( Model (Time.millisToPosix 0) [] (SearchResults Nothing [] )
     , TimeZone.getZone |> Task.attempt GetLocalTimeZone
     )
 
@@ -62,7 +66,7 @@ changeClockAt : Int -> String -> Model -> ( Model, Cmd Msg )
 changeClockAt index zoneName model =
     ( { model
         | zones = model.zones |> setAt index zoneName
-        , searchResults = Dict.empty
+        --, searchResults = 
       }
     , Cmd.none
     )
@@ -77,7 +81,7 @@ deleteClockAt index model =
     in
     ( { model
         | zones = newZones
-        , searchResults = Dict.empty
+        --, searchResults = Dict.empty
       }
     , Cmd.none
     )
