@@ -77,12 +77,13 @@ static mut SOLAR_BODIES: [Body; BODIES_COUNT] = [
     },
 ];
 
-unsafe fn offset_momentum(bodies: *mut Body) {
-    for i in 0..BODIES_COUNT {
-        for m in 0..3 {
-            // need top write out *bodies.add(i) since rust doesn't have overloaded pointer math
-            (*bodies.add(0)).velocity[m] -=
-                (*bodies.add(i)).velocity[m] * (*bodies.add(i)).mass / SOLAR_MASS;
+fn offset_momentum(bodies: &mut [Body; BODIES_COUNT]) {
+    //for i in 0..BODIES_COUNT {
+    for body in bodies {
+        for velocity_dimension in &mut body.velocity {
+            //(*bodies.add(0)).velocity[m] -=
+            //    (*bodies.add(i)).velocity[m] * (*bodies.add(i)).mass / SOLAR_MASS;
+            (*velocity_dimension) -= (*velocity_dimension) * body.mass / SOLAR_MASS;
         }
     }
 }
@@ -213,7 +214,7 @@ unsafe fn advance(bodies: *mut Body) {
 
 fn main() {
     unsafe {
-        offset_momentum(SOLAR_BODIES.as_mut_ptr());
+        offset_momentum(&mut SOLAR_BODIES);
         output_energy(SOLAR_BODIES.as_mut_ptr());
         let c = std::env::args()
             .nth(1) // get first arg
